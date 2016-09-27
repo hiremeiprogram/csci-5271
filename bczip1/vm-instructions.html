@@ -1,0 +1,326 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>5271 HA1 Virtual Machine instructions</title>
+  </head>
+
+  <body>
+    <h2>Hands-on Assignment 1 virtual machine instructions</h2>
+
+    <p>Hands-on assignment 1 is about exploiting bugs in a poorly written program
+    in order to take control of a Linux system. In order to make this
+    realistic but still not have you interfering with each other or
+    taking over CSE Labs machines, you'll test out your attacks using
+    a virtual machine that we've set up. These VMs will be spread
+    across a cluster of network-accessible machines run by CSE
+    Labs. This page gives directions and some hints about how to use
+    your VM effectively.
+    </p>
+
+    <h3>Getting started instructions</h3>
+    <ol>
+      <li>To start, send an email to the TA (Nishad Trivedi, triv0025 AT umn.edu) requesting a VM, giving the names and
+      UMN IDs (@umn.edu email addresses) of your group members,
+      remember no more than 3.</li>
+
+      <li>You'll get a reply from Nishad, assigning your group some
+      unique identifiers. Specifically your group will have three
+      numbers: in the discussion and sample commands below, we'll
+      write these numbers as GG, HH, and PP, so whenever you see those
+      you're supposed to fill in your group's numbers. GG is a unique
+      number for your group, ranging from 1 to the number of groups we
+      have (probably no more than 50). HH is number of the computer
+      your VM will run on (H for "host"); as of this writing we've
+      been assigned computers 33 through 36. Finally PP is a number,
+      probably between 11 and 19, telling which network ports your
+      machine's VM will use on the machine. Neither HH nor PP is
+      unique to your group, but the combination of the two will be.
+      </li>
+
+      <li>SSH into the machine csel-esx-xHH.cselabs.umn.edu where HH is
+      the host number mentioned before. (These machines used to just
+      be named xHH, and they are still accessible that way from some
+      places, but their more official names now have the csel-esx-
+      prefix.) Then run the command:
+
+	<p><tt>/export/scratch/csci5271/ha1/master/setup-vm</tt></p>
+	
+	<p>This will create what we'll call your group directory,</pp>
+
+	<p><tt>/export/scratch/csci5271/ha1/groupGG</tt></p>
+
+	<p>and put in it a fresh virtual machine disk image file named
+	<tt>ha1.qcow2</tt>. The disk image is about a 3GB file, so
+	copying it will take at least 10 seconds.</p>
+      </li>
+
+      <li>For convenience, change directory into your group
+      directory. The remaining special commands will be set up as
+      symlinks in this directory so you can run them with "./".
+      </li>
+      
+      <li>Start your VM for the first time using the command
+      <tt>./run-vm</tt>. This command will take over your terminal,
+      and print some reminders, but you won't see any messages
+      directly from the boot process. It may take a minute
+      or two, but soon after you see the <tt>login:</tt>
+      prompt printed in the terminal, you'll be ready to go on to the
+      next step.</li>
+
+      <li>The recommended way to log into your VM is with SSH from a
+      different window. The ports used by your VM are probably blocked
+      by the department firewall, so you can't SSH in directly from
+      anywhere, but you should be able to SSH in from any CS or CSE
+      Labs machine on the Keller Hall wired network. The most natural place
+      to SSH from is your assigned xHH machine. You
+      should use the command:
+
+	<p><tt>ssh -p PP22 student@xHH.cselabs.umn.edu</tt></p>
+
+	<p>Where PP and HH are replaced with the port and host numbers
+	mentioned above.</p>
+
+	<p>The VM comes with an account named <tt>student</tt> which
+	is set up for your use. Initially the password for the account
+	is <tt>loans</tt>, but you'll need to change the password the
+	first time you log in. Share the password with the other
+	members of your group, but not with anyone outside your
+	group. Specifically on the first time you'll have to type the
+	old password <tt>loans</tt> twice, then your new password
+	twice, then log in again with the new password.</p></li>
+
+      <li>The <tt>student</tt> account has the ability to run commands
+      as <tt>root</tt> using the <tt>sudo</tt> command, so you're
+      generally free to administer the computer as you see fit. For
+      instance if you'd like you can create separate accounts for each
+      group member.
+      There's a pre-created account <tt>test</tt> that
+      you can use as a clean, unprivileged account for testing
+      exploits. To start it's not set up with a login password, but
+      you can change the password with the command <tt>sudo passwd
+      test</tt>.</li>
+
+      <li>BCZIP is installed in <tt>/usr/bin/bczip</tt>, and the setuid wrapper program is in <tt>/usr/bin/bcunzip-as-root</tt>. 
+      There's also a copy of the source code
+      and Makefile in <tt>/src</tt>. But note that
+      the copy of the binary in /src is not setuid.
+      </li>
+
+      <li>For experimenting with changes to the binary BCZIP files,
+      it's convenient to use a tool known as a ``hex editor'': a
+      variant of a text editor that is specialized for binary files
+      instead of text, for instance showing byte values in
+      hexadecimal. The <tt>hd</tt> command will print the contents of
+      a file in hex. We've installed a number of terminal-mode hex
+      editors you can try running within the VM: for instance
+      <tt>hexer</tt> has a vi-like interface; <tt>tweak</tt> has an
+      Emacs-like interface (and there's also hexl-mode in Emacs
+      itself), and <tt>shed</tt> has a beginner-oriented
+      interface. There's also <tt>beav</tt>, <tt>dhex</tt>,
+      <tt>hexcurse</tt>, <tt>hexedit</tt>, <tt>hte</tt> <tt>le
+      -h</tt>, and <tt>hexeditor</tt>.
+      </li>
+
+      <li>The VM simulates a 64-bit processor and is running a 64-bit
+      kernel, but BCZIP is compiled as a 32-bit program to better
+      match our class discussions and older tutorials. If you want to
+      compile your own code in 32-bit mode, you need to pass the
+      <tt>-m32</tt> option to GCC, or the <tt>-32</tt> option to
+      <tt>as</tt>.
+      </li>
+
+      <li>When you're done using the VM for a while you should turn it
+      off. The recommended way of doing this is by running the command
+      <tt>sudo halt -p</tt> (or <tt>sudo shutdown -P now</tt> is
+      equivalent) inside the VM.</li>
+    </ol>
+
+    <h3>Don't interfere with other groups and users</h3>
+
+    <p>Please remember that the machines the VMs are running on are a
+    shared resource used by many other students at the same
+    time. Don't take up so much memory, CPU, or disk space that other
+    students can't use the machine. You're responsible for keeping your
+    VM secure, such as by keeping passwords secret. But you're also
+    responsible for not interfering with other groups' VMs. Hacking
+    into another group's VM is definitely not part of the
+    assignment. Because VM disk images are large, please don't store
+    them on other CSE Labs machines or run QEMU on machines other than
+    the one you've been assigned (to help you remember this, the CSE
+    Labs staff have conveniently not installed QEMU on most other
+    machines).</p>
+
+    <p>To encourage you not to leave your VM running when you aren't
+    using it, we've set it up to shut itself down if it's left running
+    unattended overnight (specifically, at about 4am). If you really
+    are using the machine at that time you can cancel the shutdown
+    with the command <tt>sudo shutdown -c</tt>.</p>
+
+    <h3>Advanced SSH setup</h3>
+
+    <p>The simplest way to connect to your VM is to SSH first into
+    your xHH host machine, and then from there into the VM. You can
+    also copy files in two steps this way using the <tt>scp</tt>
+    command: note that the option to <tt>scp</tt> for changing the
+    port is a capital <tt>-P</tt>, as opposed to <tt>ssh</tt>'s
+    lowercase <tt>-p</tt>. However if you're copying files a lot you
+    may find that you get tired of typing all of these commands. Of
+    course you can write a short script or use shell variables to
+    abbreviate commands. But the best way to save yourself typing,
+    because it also is more secure, is to use extra features of SSH.</p>
+
+    <p>A better practice than SSHing first from one machine and then
+    to another is to ask the first machine to just proxy your SSH
+    connection to the second machine. For instance, one benefit is
+    that the machine in the middle never has to see your password for
+    the second machine. You can set this up by putting the following
+    two commands in your <tt>.ssh/config</tt> file on your client
+    machine:
+
+<pre>
+Host vm-via-xHH
+  ProxyCommand ssh USERNAME@xHH.cselabs.umn.edu netcat localhost PP22
+</pre>
+
+    <br><p>Here USERNAME is your CSE Labs username, and HH and PP are host
+    and port numbers as usual. Then you can use the command <tt>ssh
+    student@vm-via-xHH</tt> to connect to the VM's <tt>student</tt>
+    account.</p>
+
+    <p>If you make just the change described above, it will still ask
+    you to type two passwords. But you can combine this with another
+    technique to avoid typing passwords, which is to create an SSH key
+    pair. This approach uses public key cryptography to create a
+    matched pair of a private key and a public key. You put the public
+    key on the machines you want to log into, and load the private key
+    into to memory of the machine you're coming from using a command
+    named <tt>ssh-agent</tt>; then SSH will automatically use the
+    private key to authenticate you in place of a password. There's a
+    few different steps involved in setting this up, but there are a
+    number of tutorials you can read on the web; one pretty good on is
+    on the <a
+    href="https://help.ubuntu.com/community/SSH/OpenSSH/Keys">Ubuntu
+    wiki</a>.</p>
+
+    <p>By the way, you might notice that several users on the VM are
+    already using SSH keys like this.</p>
+
+    <h3>Testing exploits in a clean environment</h3>
+    
+    <p>You can set things up in your VM the way you'd like, but your
+    exploits can't depend on anything special you've set up in the
+    <tt>student</tt> account or on the VM, since that would make
+    things harder for us to understand and grade your attack. (And of
+    course since you have root access, you could install extra
+    security holes on your VM, but that's not what we want to
+    evaluate.) You can use the <tt>test</tt> account for a clean
+    user environment within your VM.</p> 
+
+    <p><strong>Your exploit is considered successful if it runs
+    <tt>/bin/rootshell</tt> as root within a time period of 60 seconds.
+    </strong></p>
+
+    <p>Note that this means your exploit has to work using the
+    software that's installed on the VM image to start. We've tried to
+    include most of the things that would be useful, such as several
+    different shells and scripting languages. You can install extra
+    software on your VM image if you want to use it in developing your
+    exploits, but your final exploit can't depend on anything special
+    outside the exploit script.</p>
+
+    <h3>Avoiding and recovering from problems</h3>
+
+    <p><b>Your virtual machine should never be the only place where
+    you have a copy of your work.</b> Part of the reason for this is
+    that because of their size, we store the disk images on a
+    "scratch" disk partition that is not backed up: if that disk were
+    to have a hardware failure, all your VM images could be lost. So
+    you should keep copies of your exploit scripts in other places,
+    such as your CSE Labs home directory (which is backed up) or other
+    machines of your own. However from our past experience the more
+    likely thing to go wrong is in the running of your VM: in trying
+    to attack it you might mess up its configuration so that it no
+    longer works correctly. So here are some suggestions for avoiding
+    or recovering from that:</p>
+
+    <ul>
+      <li>Before conducting a dangerous attack from one window, make
+      sure you have another window already open in which you have a
+      root shell running (e.g., <tt>sudo /bin/bash</tt>). That way if
+      something goes wrong that interferes with, say, logging in, you can
+      fix it using that shell. You might also want to make backup
+      copies of files before you attack them; a backup copy of the
+      configuration files in <tt>/etc</tt> as they were in the
+      original VM image is in the directory <tt>/etc-backup</tt>.</li>
+
+      <li>Your VM disk image is just a regular file, so you can make a
+      backup of it with <tt>cp</tt>. But it's pretty big, so please
+      don't keep more than 1 or 2 extra copies at once.</li>
+
+      If you want to experiment with your VM and don't want to save any changes made, you can run 
+      your VM by giving the option
+      <tt>-throwaway</tt> to <tt>run-vm</tt>. When you start the VM
+      with this option, all of the changes you made to the virtual
+      disk will be discarded when the VM shuts down. Of course you
+      definitely want to keep your exploit script elsewhere if you do
+      this!</li>
+
+      <li>If you lose the ability to log into your VM's
+      <tt>student</tt> account, but the VM is otherwise working okay,
+      the course staff have their own accounts that also have
+      <tt>sudo</tt> access, so they should be able to reset your
+      password.</li>
+
+      <li>If you've messed up your VM in a serious way, but you have
+      backups of all the important data, the easiest way to fix it may
+      be to start over from a fresh VM. If you remove your
+      <tt>ha1.qcow2</tt> file and run the <tt>setup-vm</tt> script
+      again, it will give you a fresh disk image. Of course the
+      disadvantage is you'll have to redo anything you did inside the
+      VM.</li>
+
+      <li>If you've messed up your VM badly but still have important
+      information on it, you can potentially recover it in the same
+      ways you would with a physical Linux machine: by booting in
+      "recovery mode", using a "rescue CD" to boot, accessing the disk
+      image with another VM, etc. However these are all somewhat
+      complicated, so it's best to avoid this situation by using the
+      techniques above. If you want to boot your VM in a non-standard
+      way, you will probably want to access the VM's console over VNC,
+      which you can do with a command like
+
+	<p><tt>vncviewer -via USERNAME@xHH.cselabs.umn.edu localhost:PP</tt></p>
+      The bootloader screen is only visible for 10 seconds, so you
+      may want to get the VNC client almost ready to run before
+      starting the VM.</p>
+
+</li>
+    </ul>
+
+    <h3>If you want to run the VM on your own machine</h3>
+
+    <p>The VM image and the scripts we use to run it for this assignment aren't secret, so
+    in theory it would also be possible to run the VM on a non-CSE
+    Labs machine using QEMU or another VMM such as VMWare or
+    VirtualBox. However this is not a configuration supported by the
+    course staff, so if you want to try it you're on your own. And in
+    the case of any discrepancy you'll be graded according to how your
+    attacks work on the CSE Labs machines, so be sure to test before
+    you submit.</p>
+
+    <h3>If you have more questions</h3>
+    
+    <p>Please don't hesitate to ask questions if you get stuck while
+    trying to manage your VM, etc. If the question is one that
+    everyone in the class can benefit from hearing the answer to, the
+    best place to ask it is on the forum on the Moodle page. If you
+    have a question that should be answered privately, please send it
+    to both of the course staff using the email addresses on the
+    syllabus to ensure a prompt response. Technical problems with the
+    VMs should generally go to the course staff first rather than
+    <tt>operator</tt>, since we know more about how the VMs work, but
+    we'll know if we need to enlist operator.
+    </p>
+
+  </body>
+</html>
